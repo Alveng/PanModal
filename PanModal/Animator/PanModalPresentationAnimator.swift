@@ -81,7 +81,10 @@ public class PanModalPresentationAnimator: NSObject {
         let panView: UIView = transitionContext.containerView.panContainerView ?? toVC.view
 
         // Move presented view offscreen (from the bottom)
-        panView.frame = transitionContext.finalFrame(for: toVC)
+        var toFrame = transitionContext.finalFrame(for: toVC)
+        let toHeight = toFrame.height - yPos
+        toFrame.size.height = 0
+        panView.frame = toFrame
         panView.frame.origin.y = transitionContext.containerView.frame.height
 
         // Haptic feedback
@@ -91,6 +94,7 @@ public class PanModalPresentationAnimator: NSObject {
 
         PanModalAnimator.animate({
             panView.frame.origin.y = yPos
+            panView.frame.size.height = toHeight
         }, config: presentable) { [weak self] didComplete in
             // Calls viewDidAppear and viewDidDisappear
             fromVC.endAppearanceTransition()
@@ -116,6 +120,7 @@ public class PanModalPresentationAnimator: NSObject {
         let panView: UIView = transitionContext.containerView.panContainerView ?? fromVC.view
 
         PanModalAnimator.animate({
+            panView.frame.size.height = 0
             panView.frame.origin.y = transitionContext.containerView.frame.height
         }, config: presentable) { didComplete in
             fromVC.view.removeFromSuperview()

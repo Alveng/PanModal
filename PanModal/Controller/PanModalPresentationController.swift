@@ -177,6 +177,7 @@ open class PanModalPresentationController: UIPresentationController {
         guard let containerView = containerView
             else { return }
 
+        containerView.frame.size.height -= presentable?.bottomOffset ?? 0
         layoutBackgroundView(in: containerView)
         layoutPresentedView(in: containerView)
         configureScrollViewInsets()
@@ -254,9 +255,9 @@ public extension PanModalPresentationController {
 
         switch state {
         case .shortForm:
-            snap(toYPosition: shortFormYPosition)
+            snap(toYPosition: shortFormYPosition, toHeight: (containerView?.frame.height ?? 0) - shortFormYPosition)
         case .longForm:
-            snap(toYPosition: longFormYPosition)
+            snap(toYPosition: longFormYPosition, toHeight: (containerView?.frame.height ?? 0) - longFormYPosition)
         }
     }
 
@@ -575,7 +576,8 @@ private extension PanModalPresentationController {
         if presentedView.frame.origin.y < longFormYPosition {
             yDisplacement /= 2.0
         }
-        adjust(toYPosition: presentedView.frame.origin.y + yDisplacement)
+        adjust(toYPosition: presentedView.frame.origin.y + yDisplacement,
+               toHeight: presentedView.frame.size.height - yDisplacement)
 
         panGestureRecognizer.setTranslation(.zero, in: presentedView)
     }
@@ -632,9 +634,9 @@ private extension PanModalPresentationController {
         return (abs(velocity) - (1000 * (1 - Constants.snapMovementSensitivity))) > 0
     }
 
-    func snap(toYPosition yPos: CGFloat) {
+    func snap(toYPosition yPos: CGFloat, toHeight height: CGFloat) {
         PanModalAnimator.animate({ [weak self] in
-            self?.adjust(toYPosition: yPos)
+            self?.adjust(toYPosition: yPos, toHeight: height)
             self?.isPresentedViewAnimating = true
         }, config: presentable) { [weak self] didComplete in
             self?.isPresentedViewAnimating = !didComplete
@@ -644,8 +646,9 @@ private extension PanModalPresentationController {
     /**
      Sets the y position of the presentedView & adjusts the backgroundView.
      */
-    func adjust(toYPosition yPos: CGFloat) {
+    func adjust(toYPosition yPos: CGFloat, toHeight height: CGFloat) {
         presentedView.frame.origin.y = max(yPos, anchoredYPosition)
+        presentedView.frame.size.height = height
         
         guard presentedView.frame.origin.y > shortFormYPosition else {
             backgroundView.dimState = .max
@@ -808,7 +811,7 @@ private extension PanModalPresentationController {
             presentedView.frame.origin.y = longFormYPosition - yOffset
         } else {
             scrollViewYOffset = 0
-            snap(toYPosition: longFormYPosition)
+            snap(toYPosition: longFormYPosition, toHeight: (containerView?.frame.height ?? 0) - longFormYPosition)
         }
 
         scrollView.showsVerticalScrollIndicator = false

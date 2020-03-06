@@ -20,6 +20,8 @@ import UIKit
  ```
  */
 public protocol PanModalPresentable: AnyObject {
+    
+    var bottomOffset: CGFloat { get }
 
     /**
      The scroll view embedded in the view controller.
